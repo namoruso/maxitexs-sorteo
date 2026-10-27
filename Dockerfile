@@ -2,21 +2,26 @@
 FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json* ./
-COPY packages/shared/package.json packages/shared/
-COPY apps/api/package.json apps/api/
-COPY apps/web/package.json apps/web/
-RUN npm install
 
+# Copy full monorepo (except .dockerignore) so npm workspaces link correctly
+COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
-COPY packages/shared packages/shared
-COPY apps/api apps/api
-COPY apps/web apps/web
+COPY packages ./packages
+COPY apps ./apps
+
+RUN npm ci
+
+# Drop any stale incremental caches (dist is dockerignored; tsbuildinfo must not skip emit)
+RUN find . -name '*.tsbuildinfo' -delete
 
 RUN npm run build -w @maxitexs/shared \
- && npm run build -w @maxitexs/api \
- && npm run build -w @maxitexs/web \
- && npm prune --omit=dev
+ && test -f packages/shared/dist/index.js \
+ && test -f packages/shared/dist/index.d.ts \
+ && test -f node_modules/@maxitexs/shared/dist/index.d.ts
+
+RUN npm run build -w @maxitexs/api
+RUN npm run build -w @maxitexs/web
+RUN npm prune --omit=dev
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
@@ -39,5 +44,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# Migrate then serve (works on Render / Fly / VPS without a separate pre-deploy step)
 CMD ["sh", "-c", "node apps/api/dist/db/migrate.js && node apps/api/dist/index.js"]
