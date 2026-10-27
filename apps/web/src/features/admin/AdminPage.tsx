@@ -241,7 +241,7 @@ export default function AdminPage() {
                   <Icon name="search" size={22} />
                   <input
                     type="search"
-                    placeholder="Buscar nombre, cédula, laboratorio o ticket"
+                    placeholder="Buscar…"
                     aria-label="Buscar participantes"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
@@ -343,16 +343,18 @@ export default function AdminPage() {
       <footer className="ch-admin-foot">
         <span className="info">
           <Icon name="info" size={20} />
-          Un registro por cédula y teléfono · Reinicio abre una jornada nueva (00:00 Caracas)
+          <span>Un registro por cédula y teléfono · Reinicio abre una jornada nueva (00:00 Caracas)</span>
         </span>
-        <a className="ch-btn ch-btn--md ch-btn--outline" href="/api/admin/exportar.csv">
-          <Icon name="download" size={22} />
-          <span>Exportar CSV/Excel</span>
-        </a>
-        <button type="button" className="ch-btn ch-btn--md ch-btn--danger" onClick={() => setModal('reiniciar')}>
-          <Icon name="trash" size={22} />
-          <span>Nueva jornada</span>
-        </button>
+        <div className="ch-admin-foot-actions">
+          <a className="ch-btn ch-btn--md ch-btn--outline" href="/api/admin/exportar.csv">
+            <Icon name="download" size={22} />
+            <span>Exportar</span>
+          </a>
+          <button type="button" className="ch-btn ch-btn--md ch-btn--danger" onClick={() => setModal('reiniciar')}>
+            <Icon name="trash" size={22} />
+            <span>Nueva jornada</span>
+          </button>
+        </div>
       </footer>
 
       {modal === 'lanzar' && (
