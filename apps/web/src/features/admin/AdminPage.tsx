@@ -11,7 +11,7 @@ export default function AdminPage() {
   const [q, setQ] = useState('');
   const [toast, setToast] = useState('');
   const [flashId, setFlashId] = useState<number | null>(null);
-  const [modal, setModal] = useState<'lanzar' | 'reiniciar' | null>(null);
+  const [modal, setModal] = useState<'preparar' | 'lanzar' | 'reiniciar' | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -73,11 +73,19 @@ export default function AdminPage() {
     return list;
   }, [state, q]);
 
+  async function preparar() {
+    setModal(null);
+    const r = await api<{ mensaje?: string }>('/api/admin/sorteo/preparar', { method: 'POST' });
+    if (!r.ok) return showToast(r.data.mensaje || 'No se pudo preparar el sorteo.');
+    showToast('Tótem en pantalla de sorteo');
+    void load();
+  }
+
   async function lanzar() {
     setModal(null);
     const r = await api<{ mensaje?: string }>('/api/admin/sorteo', { method: 'POST' });
     if (!r.ok) return showToast(r.data.mensaje || 'No se pudo lanzar el sorteo.');
-    showToast('Sorteo lanzado');
+    showToast('Sorteo lanzado — el tótem está girando');
     void load();
   }
 
@@ -95,8 +103,8 @@ export default function AdminPage() {
     const r = await api<{ mensaje?: string }>(`/api/admin/sorteo/${state.ganador.sorteo_id}/ausente`, {
       method: 'POST',
     });
-    if (!r.ok) return showToast(r.data.mensaje || 'No se pudo relanzar.');
-    showToast('Nuevo sorteo lanzado');
+    if (!r.ok) return showToast(r.data.mensaje || 'No se pudo preparar el nuevo sorteo.');
+    showToast('Ausente marcado · tótem listo para lanzar de nuevo');
     void load();
   }
 
@@ -123,6 +131,9 @@ export default function AdminPage() {
 
   const g = state.ganador;
   const after = Boolean(g);
+  const te = state.totem_estado;
+  const spinning = te === 'sorteo';
+  const ready = te === 'preparacion';
 
   return (
     <div className="ch ch-screen ch-admin">
@@ -152,25 +163,37 @@ export default function AdminPage() {
             <h3>Sorteo</h3>
             <div className="ch-card-action">
               {after && <span className="ch-badge">Sorteo #{state.sorteo_numero ?? 1} realizado</span>}
-              <span className="ch-badge ch-badge--neutral">Tótem: {state.totem_estado}</span>
+              <span className="ch-badge ch-badge--neutral">Tótem: {te}</span>
             </div>
           </header>
           <p>
-            {after
-              ? 'El tótem muestra al ganador. Confirma la entrega o relanza si no se presenta. También puedes volver al QR.'
-              : `Elige un ganador al azar entre los ${state.total} profesionales registrados. El tótem mostrará la animación.`}
+            {spinning
+              ? 'El tótem está girando. En unos segundos revelará al ganador.'
+              : ready
+                ? 'El tótem ya muestra la pantalla del sorteo. Pulsa Lanzar (aquí o en el tótem) para que empiece a girar.'
+                : after
+                  ? 'El tótem muestra al ganador. Confirma la entrega o marca ausente. Para otro sorteo, prepara de nuevo el tótem.'
+                  : `Primero prepara el tótem (cambia a la pantalla de sorteo). Luego lanza para elegir un ganador entre los ${state.total} registrados.`}
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className={`ch-btn ch-btn--lg ${after ? 'ch-btn--outline' : 'ch-btn--primary'}`}
-              onClick={() => setModal('lanzar')}
-            >
-              <Icon name="play" size={22} />
-              <span>{after ? 'Lanzar otro sorteo' : 'Lanzar sorteo'}</span>
-            </button>
-            {state.totem_estado !== 'captacion' && (
-              <button type="button" className="ch-btn ch-btn--lg ch-btn--outline" onClick={() => void captacion()}>
+            {ready ? (
+              <button type="button" className="ch-btn ch-btn--lg ch-btn--primary" onClick={() => setModal('lanzar')}>
+                <Icon name="play" size={22} />
+                <span>Lanzar sorteo</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={`ch-btn ch-btn--lg ${after || spinning ? 'ch-btn--outline' : 'ch-btn--primary'}`}
+                disabled={spinning}
+                onClick={() => setModal('preparar')}
+              >
+                <Icon name="play" size={22} />
+                <span>{spinning ? 'Sorteo en curso…' : after ? 'Preparar otro sorteo' : 'Ir al sorteo'}</span>
+              </button>
+            )}
+            {te !== 'captacion' && (
+              <button type="button" className="ch-btn ch-btn--lg ch-btn--outline" onClick={() => void captacion()} disabled={spinning}>
                 <Icon name="refresh" size={22} />
                 <span>Volver al QR</span>
               </button>
@@ -223,9 +246,9 @@ export default function AdminPage() {
                   <Icon name="check" size={22} />
                   <span>{state.entregado ? 'Entregado' : 'Confirmar entrega'}</span>
                 </button>
-                <button type="button" className="ch-btn ch-btn--md ch-btn--warning" onClick={() => void ausente()}>
+                <button type="button" className="ch-btn ch-btn--md ch-btn--warning" onClick={() => void ausente()} disabled={spinning}>
                   <Icon name="refresh" size={22} />
-                  <span>Ausente / Relanzar</span>
+                  <span>Ausente / Preparar</span>
                 </button>
               </div>
             </div>
@@ -357,10 +380,19 @@ export default function AdminPage() {
         </div>
       </footer>
 
+      {modal === 'preparar' && (
+        <Modal
+          title="¿Ir a la pantalla de sorteo?"
+          body="El tótem dejará el QR y mostrará la animación de cambio a la pantalla de sorteo. El ganador aún no se elige hasta que pulses Lanzar."
+          onClose={() => setModal(null)}
+          okLabel="Sí, preparar tótem"
+          onOk={() => void preparar()}
+        />
+      )}
       {modal === 'lanzar' && (
         <Modal
           title="¿Lanzar el sorteo ahora?"
-          body={`Se elegirá 1 ganador al azar entre ${state.total} participantes y el tótem mostrará la animación.`}
+          body={`Se elegirá 1 ganador al azar entre ${state.total} participantes y el tótem empezará a girar hasta revelarlo.`}
           onClose={() => setModal(null)}
           okLabel="Sí, lanzar sorteo"
           onOk={() => void lanzar()}

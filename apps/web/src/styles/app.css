@@ -48,8 +48,60 @@ body { font-family: var(--font-sans); color: var(--ink); }
   will-change: transform;
 }
 .totem-stage .ch-totem { position: absolute; inset: 0; width: 1080px; height: 1920px; }
-.totem-state { position: absolute; inset: 0; }
+.totem-state {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.totem-state--in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+.totem-state--out {
+  opacity: 0;
+  transform: translateY(40px) scale(0.98);
+  pointer-events: none;
+  z-index: 1;
+}
 .ch-totem--hidden { display: none !important; }
+.ch-totem-slot-wrap { margin-top: 64px; }
+.ch-totem-launch {
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.ch-totem-launch-btn {
+  min-width: 520px;
+  height: 112px !important;
+  font-size: 42px !important;
+  font-weight: 800;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  animation: totem-launch-pulse 1.8s ease-in-out infinite;
+}
+.ch-totem-launch-btn:disabled {
+  animation: none;
+  opacity: 0.75;
+}
+.ch-totem-launch-err {
+  margin: 0;
+  color: var(--accent);
+  font-size: 28px;
+  font-weight: 700;
+}
+@keyframes totem-launch-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28); }
+  50% { transform: scale(1.03); box-shadow: 0 20px 48px rgba(0, 104, 174, 0.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .totem-state { transition: none; }
+  .ch-totem-launch-btn { animation: none; }
+}
 
 /* Shorter / smaller kiosk screens: tighten vertical rhythm so more fits after scale */
 html.totem-compact .totem-stage .ch-totem {
@@ -85,7 +137,17 @@ html.totem-compact .totem-stage .ch-totem-count p {
 html.totem-compact .totem-stage .ch-logo img {
   height: 140px !important;
 }
-html.totem-compact .totem-stage .ch-totem--draw .ch-totem-main > div[style],
+html.totem-compact .totem-stage .ch-totem-slot-wrap {
+  margin-top: 36px;
+}
+html.totem-compact .totem-stage .ch-totem-launch {
+  margin-top: 32px;
+}
+html.totem-compact .totem-stage .ch-totem-launch-btn {
+  min-width: 420px;
+  height: 88px !important;
+  font-size: 34px !important;
+}
 html.totem-compact .totem-stage .ch-totem--win .ch-totem-winner {
   margin-top: 48px !important;
 }

@@ -13,7 +13,10 @@ export default function TotemPage() {
 
   const [data, setData] = useState<TotemEstadoResponse | null>(null);
   const [online, setOnline] = useState(true);
+  const [launching, setLaunching] = useState(false);
+  const [launchErr, setLaunchErr] = useState('');
   const lastSorteoId = useRef<number | null>(null);
+  const idleStarted = useRef(false);
   const reelRef = useRef<HTMLDivElement>(null);
   const qrDrawn = useRef<string | null>(null);
 
@@ -37,7 +40,12 @@ export default function TotemPage() {
   useEventStream('/api/totem/stream', (ev: RealtimeEvent) => {
     if (ev.type === 'totem.contador') {
       setData((prev) => (prev ? { ...prev, total: ev.total } : prev));
-    } else if (ev.type === 'totem.estado' || ev.type === 'sorteo.lanzado' || ev.type === 'sorteo.revelado' || ev.type === 'jornada.reiniciada') {
+    } else if (
+      ev.type === 'totem.estado' ||
+      ev.type === 'sorteo.lanzado' ||
+      ev.type === 'sorteo.revelado' ||
+      ev.type === 'jornada.reiniciada'
+    ) {
       void load();
     } else if (ev.type === 'participante.creado') {
       setData((prev) => (prev ? { ...prev, total: ev.total } : prev));
@@ -52,7 +60,6 @@ export default function TotemPage() {
     if (fromApi && !/localhost|127\.0\.0\.1/.test(fromApi)) {
       try {
         const u = new URL(fromApi);
-        // Same host as the totem page, or any non-local absolute URL from the API
         if (u.origin === origin || u.protocol === 'https:') url = fromApi;
       } catch {
         /* keep origin fallback */
@@ -77,24 +84,54 @@ export default function TotemPage() {
       .catch(() => undefined);
   }, [data?.url_registro]);
 
-  // Slot animation when entering sorteo
+  // Idle reel while waiting to launch
+  useEffect(() => {
+    if (!data || data.estado !== 'preparacion') {
+      idleStarted.current = false;
+      return;
+    }
+    if (idleStarted.current) return;
+    idleStarted.current = true;
+    startIdleReel(reelRef.current, data.nombres);
+  }, [data]);
+
+  // Slot animation when entering sorteo (after Lanzar)
   useEffect(() => {
     if (!data || data.estado !== 'sorteo') return;
     if (lastSorteoId.current === data.sorteo_id) return;
     lastSorteoId.current = data.sorteo_id;
+    idleStarted.current = false;
+    setLaunching(false);
     runSlot(reelRef.current, data.nombres, data.ganador?.nombre_mask ?? '');
   }, [data]);
+
+  async function onLanzar() {
+    if (launching) return;
+    setLaunchErr('');
+    setLaunching(true);
+    const r = await api<{ mensaje?: string }>('/api/totem/lanzar', { method: 'POST' });
+    if (!r.ok) {
+      setLaunching(false);
+      setLaunchErr(r.data.mensaje || 'No se pudo lanzar el sorteo.');
+      return;
+    }
+    void load();
+  }
 
   const estado = data?.estado ?? 'captacion';
   const premio = data?.premio ?? 'Premio';
   const total = data?.total ?? 0;
   const g = data?.ganador;
+  const onDraw = estado === 'preparacion' || estado === 'sorteo';
 
   return (
     <div className="ch totem-page">
       <div className="totem-stage" id="stage" ref={stageRef}>
         {/* Captación */}
-        <div className={`ch ch-screen ch-totem totem-state ${estado !== 'captacion' ? 'ch-totem--hidden' : ''}`}>
+        <div
+          className={`ch ch-screen ch-totem totem-state ${estado === 'captacion' ? 'totem-state--in' : 'totem-state--out'}`}
+          aria-hidden={estado !== 'captacion'}
+        >
           <div className="ch-totem-top">
             <span className="ch-logo">
               <img src="/assets/logo.png" alt="Corporación Maxitex’s" style={{ height: 200, width: 'auto' }} />
@@ -121,8 +158,11 @@ export default function TotemPage() {
           <p className="ch-totem-foot">Toma menos de 1 minuto · Un registro por cédula</p>
         </div>
 
-        {/* Sorteo */}
-        <div className={`ch ch-screen ch-totem ch-totem--draw totem-state ${estado !== 'sorteo' ? 'ch-totem--hidden' : ''}`}>
+        {/* Preparación + Sorteo (misma pantalla; el botón Lanzar solo en preparación) */}
+        <div
+          className={`ch ch-screen ch-totem ch-totem--draw totem-state ${onDraw ? 'totem-state--in' : 'totem-state--out'}`}
+          aria-hidden={!onDraw}
+        >
           <div className="ch-totem-top">
             <span className="ch-logo-plate">
               <img src="/assets/isotipo.png" alt="Corporación Maxitex’s" style={{ height: 96, width: 'auto' }} />
@@ -130,24 +170,42 @@ export default function TotemPage() {
             <Status online={online} />
           </div>
           <div className="ch-totem-main" style={{ justifyContent: 'center' }}>
-            <h1>¡Es hora del sorteo!</h1>
+            <h1>{estado === 'sorteo' ? '¡Sorteando…!' : '¡Es hora del sorteo!'}</h1>
             <p className="ch-totem-sub">
               Entre {total} profesionales registrados, uno se lleva {premio}.
             </p>
-            <div style={{ marginTop: 96 }}>
-              <div className="ch-slot" style={{ width: 920, height: 540 }} aria-live="polite" aria-label="Sorteo en curso">
+            <div className="ch-totem-slot-wrap">
+              <div className="ch-slot" style={{ width: 920, height: 540 }} aria-live="polite" aria-label="Sorteo">
                 <div className="ch-slot-reel" ref={reelRef} />
                 <div className="ch-slot-dim" style={{ top: 0, height: 180 }} />
                 <div className="ch-slot-dim" style={{ bottom: 0, height: 180 }} />
                 <div className="ch-slot-frame" style={{ top: 176, height: 188 }} />
               </div>
             </div>
+            {estado === 'preparacion' && (
+              <div className="ch-totem-launch">
+                <button
+                  type="button"
+                  className="ch-btn ch-btn--primary ch-totem-launch-btn"
+                  onClick={() => void onLanzar()}
+                  disabled={launching}
+                >
+                  <span>{launching ? 'Lanzando…' : 'Lanzar sorteo'}</span>
+                </button>
+                {launchErr && <p className="ch-totem-launch-err">{launchErr}</p>}
+              </div>
+            )}
           </div>
-          <p className="ch-totem-foot">Sorteo al azar · Un ticket por cédula</p>
+          <p className="ch-totem-foot">
+            {estado === 'preparacion' ? 'Toca el botón para elegir al ganador' : 'Sorteo al azar · Un ticket por cédula'}
+          </p>
         </div>
 
         {/* Ganador */}
-        <div className={`ch ch-screen ch-totem ch-totem--win totem-state ${estado !== 'ganador' ? 'ch-totem--hidden' : ''}`}>
+        <div
+          className={`ch ch-screen ch-totem ch-totem--win totem-state ${estado === 'ganador' ? 'totem-state--in' : 'totem-state--out'}`}
+          aria-hidden={estado !== 'ganador'}
+        >
           <Confetti />
           <div className="ch-totem-top">
             <span className="ch-logo-plate">
@@ -183,12 +241,35 @@ function Status({ online }: { online: boolean }) {
   );
 }
 
+function buildPool(names: string[]): string[] {
+  return names.length >= 3
+    ? names
+    : ['Ana M.', 'Carlos R.', 'Lucía G.', 'Pedro S.', 'María F.', 'José L.', 'Sofía T.', 'Diego V.'];
+}
+
+function startIdleReel(reel: HTMLDivElement | null, names: string[]) {
+  if (!reel) return;
+  const pool = buildPool(names);
+  let list: string[] = [];
+  for (let i = 0; i < 8; i++) list = list.concat(pool);
+  reel.innerHTML = list
+    .map((n) => `<div class="ch-slot-row" style="height:${ROW}px;font-size:88px">${esc(n)}</div>`)
+    .join('');
+  reel.style.transition = 'none';
+  reel.style.transform = 'translateY(0)';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+  void reel.offsetWidth;
+  const distance = -(list.length - 4) * ROW;
+  requestAnimationFrame(() => {
+    reel.style.transition = 'transform 28s linear';
+    reel.style.transform = `translateY(${distance}px)`;
+  });
+}
+
 function runSlot(reel: HTMLDivElement | null, names: string[], winner: string) {
   if (!reel) return;
-  const pool =
-    names.length >= 3
-      ? names
-      : ['Ana M.', 'Carlos R.', 'Lucía G.', 'Pedro S.', 'María F.', 'José L.', 'Sofía T.', 'Diego V.'];
+  const pool = buildPool(names);
   let list: string[] = [];
   for (let i = 0; i < 4; i++) list = list.concat(pool);
   list.push(pool[0]!, winner || pool[1]!, pool[1]!);

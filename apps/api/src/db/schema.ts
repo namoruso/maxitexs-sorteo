@@ -82,7 +82,7 @@ export const totemEstado = pgTable(
   },
   (t) => [
     check('chk_totem_id', sql`${t.id} = 1`),
-    check('chk_totem_estado', sql`${t.estado} in ('captacion', 'sorteo', 'ganador')`),
+    check('chk_totem_estado', sql`${t.estado} in ('captacion', 'preparacion', 'sorteo', 'ganador')`),
   ],
 );
 

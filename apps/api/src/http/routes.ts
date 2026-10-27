@@ -68,6 +68,23 @@ export function publicRoutes(): Router {
     }
   });
 
+  const totemLanzarLimit = rateLimit({
+    windowMs: 60_000,
+    max: 6,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { mensaje: 'Espera un momento antes de lanzar de nuevo.' },
+  });
+
+  /** Public launch from the totem preparation screen (only valid in preparacion). */
+  router.post('/totem/lanzar', totemLanzarLimit, async (_req, res, next) => {
+    try {
+      res.json(await sorteo.lanzarSorteo());
+    } catch (e) {
+      next(e);
+    }
+  });
+
   router.get('/totem/stream', (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -160,6 +177,14 @@ export function adminRoutes(): Router {
       clearInterval(ping);
       unsub();
     });
+  });
+
+  router.post('/sorteo/preparar', async (_req, res, next) => {
+    try {
+      res.json(await sorteo.prepararSorteo());
+    } catch (e) {
+      next(e);
+    }
   });
 
   router.post('/sorteo', async (_req, res, next) => {

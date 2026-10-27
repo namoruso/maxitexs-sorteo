@@ -1,4 +1,4 @@
-export type TotemEstado = 'captacion' | 'sorteo' | 'ganador';
+export type TotemEstado = 'captacion' | 'preparacion' | 'sorteo' | 'ganador';
 export type SorteoEstado = 'sorteado' | 'entregado' | 'ausente';
 export type CedulaTipo = 'V' | 'E';
 

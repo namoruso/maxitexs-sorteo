@@ -319,8 +319,74 @@ export async function getAdminEstado(): Promise<AdminEstadoResponse> {
   };
 }
 
+/** Step 1: move totem to preparation screen (no winner yet). */
+export async function prepararSorteo(): Promise<{ ok: true; total: number }> {
+  const jornadaId = await activeJornadaId();
+  const resolved = await resolveTotemEstado();
+
+  if (resolved.estado === 'sorteo') {
+    throw new AppError(
+      'INVALID_STATE',
+      'Hay un sorteo en curso. Espera a que termine la animación.',
+      409,
+    );
+  }
+
+  const totalRows = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(participantes)
+    .where(eq(participantes.jornadaId, jornadaId));
+  const total = totalRows[0]?.n ?? 0;
+
+  if (total < 1) {
+    throw new AppError('NO_ELIGIBLE', 'No hay participantes registrados para el sorteo.', 422);
+  }
+
+  // Eligible pool (exclude already sorteado/entregado)
+  const winners = await db
+    .select({ participanteId: sorteos.participanteId })
+    .from(sorteos)
+    .where(
+      and(eq(sorteos.jornadaId, jornadaId), inArray(sorteos.estado, ['sorteado', 'entregado'])),
+    );
+  const excludeIds = winners.map((w) => w.participanteId);
+  const pool = await db
+    .select({ id: participantes.id })
+    .from(participantes)
+    .where(
+      excludeIds.length
+        ? and(eq(participantes.jornadaId, jornadaId), notInArray(participantes.id, excludeIds))
+        : eq(participantes.jornadaId, jornadaId),
+    );
+  if (pool.length === 0) {
+    throw new AppError('NO_ELIGIBLE', 'No hay participantes elegibles para el sorteo.', 422);
+  }
+
+  if (resolved.estado === 'preparacion') {
+    return { ok: true, total };
+  }
+
+  await db
+    .update(totemEstado)
+    .set({ estado: 'preparacion', sorteoId: null, revelarAt: null, updatedAt: new Date() })
+    .where(eq(totemEstado.id, 1));
+
+  await publish({ type: 'totem.estado', estado: 'preparacion', sorteo_id: null, total });
+  return { ok: true, total };
+}
+
+/** Step 2: pick winner and start totem spin (only from preparacion). */
 export async function lanzarSorteo(): Promise<SorteoResponse> {
   const jornadaId = await activeJornadaId();
+  const resolved = await resolveTotemEstado();
+
+  if (resolved.estado !== 'preparacion') {
+    throw new AppError(
+      'INVALID_STATE',
+      'Primero prepara el sorteo para pasar el tótem a la pantalla de lanzamiento.',
+      409,
+    );
+  }
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -444,16 +510,15 @@ export async function confirmarEntrega(sorteoId: number): Promise<{ ok: true }> 
   return { ok: true };
 }
 
-export async function marcarAusenteYRelanzar(sorteoId: number): Promise<SorteoResponse> {
+/** Mark winner absent and return totem to preparation so staff can launch again. */
+export async function marcarAusenteYRelanzar(
+  sorteoId: number,
+): Promise<{ ok: true; total: number }> {
   const s = await db.query.sorteos.findFirst({ where: eq(sorteos.id, sorteoId) });
   if (!s) throw new AppError('NOT_FOUND', 'Sorteo no encontrado', 404);
   await db.update(sorteos).set({ estado: 'ausente' }).where(eq(sorteos.id, sorteoId));
   await publish({ type: 'sorteo.ausente', sorteo_id: sorteoId });
-  await db
-    .update(totemEstado)
-    .set({ estado: 'captacion', sorteoId: null, revelarAt: null, updatedAt: new Date() })
-    .where(eq(totemEstado.id, 1));
-  return lanzarSorteo();
+  return prepararSorteo();
 }
 
 export async function volverACaptacion(): Promise<{ ok: true }> {
