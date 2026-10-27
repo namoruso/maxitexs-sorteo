@@ -12,7 +12,6 @@ export default function TotemPage() {
   useScaleToFit(stageRef);
 
   const [data, setData] = useState<TotemEstadoResponse | null>(null);
-  const [online, setOnline] = useState(true);
   const [launching, setLaunching] = useState(false);
   const [launchErr, setLaunchErr] = useState('');
   const lastSorteoId = useRef<number | null>(null);
@@ -22,13 +21,11 @@ export default function TotemPage() {
 
   const apply = useCallback((d: TotemEstadoResponse) => {
     setData(d);
-    setOnline(true);
   }, []);
 
   const load = useCallback(async () => {
     const r = await api<TotemEstadoResponse>('/api/totem/estado');
     if (r.ok) apply(r.data);
-    else if (r.offline || r.status >= 500) setOnline(false);
   }, [apply]);
 
   useEffect(() => {
@@ -132,11 +129,10 @@ export default function TotemPage() {
           className={`ch ch-screen ch-totem totem-state ${estado === 'captacion' ? 'totem-state--in' : 'totem-state--out'}`}
           aria-hidden={estado !== 'captacion'}
         >
-          <div className="ch-totem-top">
+          <div className="ch-totem-top ch-totem-top--center">
             <span className="ch-logo">
               <img src="/assets/logo.png" alt="Corporación Maxitex’s" style={{ height: 200, width: 'auto' }} />
             </span>
-            <Status online={online} />
           </div>
           <div className="ch-totem-main" style={{ paddingTop: 48 }}>
             <h1>
@@ -147,7 +143,6 @@ export default function TotemPage() {
             </div>
             <div className="ch-totem-count">
               <div>
-                <span className="bang">¡</span>
                 <span className="big">
                   <span className="ch-counter-num" aria-live="polite">{total}</span>
                 </span>
@@ -163,11 +158,10 @@ export default function TotemPage() {
           className={`ch ch-screen ch-totem ch-totem--draw totem-state ${onDraw ? 'totem-state--in' : 'totem-state--out'}`}
           aria-hidden={!onDraw}
         >
-          <div className="ch-totem-top">
+          <div className="ch-totem-top ch-totem-top--center">
             <span className="ch-logo-plate">
               <img src="/assets/isotipo.png" alt="Corporación Maxitex’s" style={{ height: 96, width: 'auto' }} />
             </span>
-            <Status online={online} />
           </div>
           <div className="ch-totem-main" style={{ justifyContent: 'center' }}>
             <h1>{estado === 'sorteo' ? '¡Sorteando…!' : '¡Es hora del sorteo!'}</h1>
@@ -207,11 +201,10 @@ export default function TotemPage() {
           aria-hidden={estado !== 'ganador'}
         >
           <Confetti />
-          <div className="ch-totem-top">
+          <div className="ch-totem-top ch-totem-top--center">
             <span className="ch-logo-plate">
               <img src="/assets/isotipo.png" alt="Corporación Maxitex’s" style={{ height: 96, width: 'auto' }} />
             </span>
-            <Status online={online} />
           </div>
           <div className="ch-totem-main" style={{ justifyContent: 'center', position: 'relative' }}>
             <h1>¡Tenemos ganador!</h1>
@@ -229,15 +222,6 @@ export default function TotemPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Status({ online }: { online: boolean }) {
-  return (
-    <span className={`ch-status ch-status--totem ${online ? 'ch-status--on' : 'ch-status--off'}`} role="status">
-      <i aria-hidden="true" />
-      <span>{online ? 'En línea' : 'Sin conexión'}</span>
-    </span>
   );
 }
 

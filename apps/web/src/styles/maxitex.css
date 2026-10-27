@@ -175,6 +175,7 @@
 /* Tótem 1080×1920 */
 .ch-totem { width: 1080px; height: 1920px; padding: var(--space-10); display: flex; flex-direction: column; background: var(--bg); }
 .ch-totem-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.ch-totem-top--center { justify-content: center; align-items: center; }
 .ch-totem-qr { margin-top: var(--space-6); padding: 40px; background: var(--surface); border-radius: var(--radius-md); border: 1px solid var(--line); }
 .ch-totem-main { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .ch-totem h1 { margin: 0; font-size: 96px; line-height: 1.04; letter-spacing: -0.02em; font-weight: 800; }
