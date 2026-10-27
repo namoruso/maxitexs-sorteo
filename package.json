@@ -1,0 +1,24 @@
+{
+  "name": "maxitexs-sorteo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Sorteo en vivo Corporación Maxitex’s — React + Vite + Express + PostgreSQL",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @maxitexs/api & npm run dev -w @maxitexs/web",
+    "dev:api": "npm run dev -w @maxitexs/api",
+    "dev:web": "npm run dev -w @maxitexs/web",
+    "build": "npm run build -w @maxitexs/shared && npm run build -w @maxitexs/api && npm run build -w @maxitexs/web",
+    "start": "npm run start -w @maxitexs/api",
+    "typecheck": "npm run typecheck -w @maxitexs/shared && npm run typecheck -w @maxitexs/api && npm run typecheck -w @maxitexs/web",
+    "db:generate": "npm run db:generate -w @maxitexs/api",
+    "db:migrate": "npm run db:migrate -w @maxitexs/api",
+    "db:seed": "npm run db:seed -w @maxitexs/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

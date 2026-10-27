@@ -1,0 +1,47 @@
+/* Generado desde tokens.json del sistema de diseño Corporación Maxitex’s */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-sunken: #eaeff6;
+  --ink: #15264e;
+  --ink-muted: #56607a;
+  --line: #dde3ec;
+  --line-strong: #7d8799;
+  --primary: #0068ae;
+  --primary-strong: #00528a;
+  --primary-soft: #e3effa;
+  --on-primary: #ffffff;
+  --secondary: #15264e;
+  --secondary-strong: #0c1834;
+  --on-secondary: #ffffff;
+  --on-secondary-muted: #b4c2dd;
+  --accent: #e91e2d;
+  --accent-strong: #9a1c1f;
+  --accent-soft: #fde8ea;
+  --on-accent: #ffffff;
+  --success: #157a47;
+  --success-soft: #e3f3ea;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --warning: #9a5200;
+  --warning-soft: #fff1d6;
+  --disabled: #e2e6ed;
+  --on-disabled: #5f6573;
+  --overlay: rgba(12, 24, 52, 0.56);
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+  --shadow-modal: 0 24px 64px rgba(12, 24, 52, 0.24);
+  --grid-totem: 1080px;
+  --grid-mobile: 390px;
+  --grid-admin: 1440px;
+  --control-height: 56px;
+  --font-sans: "Bw Modelica", "Montserrat", system-ui, sans-serif;
+}

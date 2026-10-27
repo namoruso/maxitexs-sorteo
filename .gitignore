@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/*.db
+data/*.db-*
+.env
+*.log
+.DS_Store
+_legacy/
+apps/web/dist/
+apps/api/dist/
+packages/shared/dist/
