@@ -1,0 +1,46 @@
+# Producción en un VPS (DigitalOcean, Hetzner, Contabo, etc.)
+# Uso:
+#   cp .env.example .env.prod   # edita PUBLIC_URL, ADMIN_*, SESSION_SECRET
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-maxitexs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-maxitexs_sorteo}
+      TZ: America/Caracas
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-maxitexs} -d ${POSTGRES_DB:-maxitexs_sorteo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      TZ: America/Caracas
+      DATABASE_URL: postgresql://${POSTGRES_USER:-maxitexs}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-maxitexs_sorteo}
+      PUBLIC_URL: ${PUBLIC_URL:?set PUBLIC_URL to https://your-domain}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      PREMIO: ${PREMIO:-Premio}
+      EVENT_NAME: ${EVENT_NAME:-Jornada Maxitex’s 2026}
+    command: >
+      sh -c "node apps/api/dist/db/migrate.js && node apps/api/dist/index.js"
+
+volumes:
+  pgdata:

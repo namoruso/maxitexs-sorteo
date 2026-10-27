@@ -35,9 +35,9 @@ npm run dev:web   # :5173 (proxy /api → :3000)
 | Tótem | http://localhost:5173/totem |
 | Admin | http://localhost:5173/admin (`admin` / ver `.env`) |
 
-## Producción / Railway
+## Producción
 
-Ver [RAILWAY.md](./RAILWAY.md).
+Si no puedes usar Railway, ver alternativas en **[DEPLOY.md](./DEPLOY.md)** (Render, VPS+Docker, Fly.io).
 
 ```bash
 npm run build
