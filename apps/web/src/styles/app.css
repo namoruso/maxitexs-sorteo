@@ -107,7 +107,7 @@ html.totem-compact .totem-stage .ch-totem-foot {
   font-size: 28px;
 }
 
-/* ---------- Admin: fluid + responsive ---------- */
+/* ---------- Admin: fluid document layout (no clipped panels) ---------- */
 html, body, #root {
   width: 100%;
   max-width: 100%;
@@ -120,7 +120,7 @@ html, body, #root {
   min-height: 100vh;
   height: auto !important;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -132,9 +132,12 @@ html, body, #root {
   max-width: 100%;
   box-sizing: border-box;
 }
-.ch-admin-main {
-  grid-template-rows: auto auto minmax(200px, 1fr);
-  flex: 1 1 auto;
+.ch-admin-control,
+.ch-admin-win,
+.ch-admin-table {
+  overflow: visible;
+  height: auto;
+  min-height: 0;
 }
 .ch-admin-win dl > .wide { grid-column: span 1; }
 .ch-admin-table .ch-card-action {
@@ -145,6 +148,18 @@ html, body, #root {
 .ch-admin-table .ch-table-wrap {
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
+  overflow: auto;
+}
+.ch-admin-table .ch-table td {
+  white-space: nowrap;
+  line-height: 1.35;
+  vertical-align: middle;
+  height: auto;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.ch-admin-table .ch-table th {
+  white-space: nowrap;
 }
 .ch-admin-people-cards { display: none; }
 .ch-admin-people-empty {
@@ -180,20 +195,7 @@ html, body, #root {
 .ch-table tbody tr:hover td { background: var(--surface-sunken); }
 .ch-table tbody tr.is-hl:hover td { background: var(--accent-soft); }
 
-/* Desktop panel: lock to viewport with internal scroll */
-@media (min-width: 1101px) {
-  .ch.ch-admin.ch-screen {
-    height: 100dvh !important;
-    height: 100vh !important;
-    overflow: hidden;
-  }
-  .ch-admin-main {
-    min-height: 0;
-    overflow: hidden;
-  }
-}
-
-/* Tablet */
+/* Stack Sorteo + Ganador before they crush each other */
 @media (max-width: 1100px) {
   .ch-admin-bar {
     height: auto;
@@ -219,15 +221,21 @@ html, body, #root {
     order: 2;
   }
   .ch-admin-main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto minmax(200px, 1fr);
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
     padding: 12px;
     gap: 12px;
   }
-  .ch-admin-control { grid-column: 1; grid-row: 1; }
-  .ch-admin-win { grid-column: 2; grid-row: 1; }
-  .ch-admin-table { grid-column: 1 / -1; grid-row: 2; }
+  .ch-admin-control,
+  .ch-admin-win,
+  .ch-admin-table {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+  }
+  .ch-admin-win .acts {
+    grid-template-columns: 1fr 1fr;
+  }
   .ch-admin-foot {
     height: auto;
     flex-wrap: wrap;
@@ -241,7 +249,6 @@ html, body, #root {
   }
   .ch-admin-foot-actions {
     width: 100%;
-    justify-content: stretch;
   }
   .ch-admin-foot-actions .ch-btn {
     flex: 1 1 0;
@@ -250,7 +257,7 @@ html, body, #root {
   }
 }
 
-/* Phone / narrow */
+/* Phone / narrow — cards list instead of table */
 @media (max-width: 820px) {
   .ch-admin-bar {
     padding: 10px 12px;
@@ -274,20 +281,8 @@ html, body, #root {
   .ch-admin-bar .ch-status span { font-size: 12px; }
 
   .ch-admin-main {
-    display: flex;
-    flex-direction: column;
     padding: 10px;
     gap: 10px;
-    flex: 1 1 auto;
-  }
-  .ch-admin-control,
-  .ch-admin-win,
-  .ch-admin-table {
-    width: 100%;
-    max-width: 100%;
-    grid-column: auto;
-    grid-row: auto;
-    min-width: 0;
   }
   .ch-admin-control,
   .ch-admin-win,
@@ -326,8 +321,6 @@ html, body, #root {
     line-height: 1.45;
   }
   .ch-admin-control .meta {
-    flex-wrap: wrap;
-    gap: 6px 14px;
     font-size: 13px;
   }
   .ch-admin-control .ch-btn--lg,
@@ -361,7 +354,6 @@ html, body, #root {
     font-size: 14px;
   }
 
-  /* Table → cards */
   .ch-admin-table .ch-table-wrap { display: none; }
   .ch-admin-people-cards {
     display: flex;
@@ -412,7 +404,6 @@ html, body, #root {
     position: sticky;
     bottom: 0;
     z-index: 5;
-    height: auto;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -426,9 +417,6 @@ html, body, #root {
     font-size: 12px;
     line-height: 1.35;
     align-items: flex-start;
-  }
-  .ch-admin-foot .info span {
-    min-width: 0;
   }
   .ch-admin-foot-actions {
     width: 100%;
@@ -453,7 +441,6 @@ html, body, #root {
   .ch-modal-actions .ch-btn { width: 100%; justify-content: center; }
 }
 
-/* Very small phones */
 @media (max-width: 380px) {
   .ch-admin-bar .kpi span { display: none; }
   .ch-btn--lg { font-size: 15px; padding-inline: 14px; }

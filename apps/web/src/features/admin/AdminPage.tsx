@@ -208,7 +208,7 @@ export default function AdminPage() {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <p className="nm">{g.nombre}</p>
               <dl>
                 <div><dt>Cédula</dt><dd>{g.cedula}</dd></div>
