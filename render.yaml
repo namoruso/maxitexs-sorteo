@@ -20,6 +20,8 @@ services:
         generateValue: true
       - key: SESSION_SECRET
         generateValue: true
+      # Opcional. Si falta o es localhost, la app usa RENDER_EXTERNAL_URL.
+      # Recomendado: https://TU-SERVICIO.onrender.com
       - key: PUBLIC_URL
         sync: false
       - key: DATABASE_URL

@@ -235,7 +235,7 @@ export default function AdminPage() {
         <section className="ch-card ch-admin-table">
           <header className="ch-card-head">
             <h3>Profesionales registrados</h3>
-            <div className="ch-card-action" style={{ width: 400 }}>
+            <div className="ch-card-action">
               <label className="ch-field ch-field--sm">
                 <div className="ch-input ch-input--icon">
                   <Icon name="search" size={22} />
@@ -272,7 +272,7 @@ export default function AdminPage() {
                   </tr>
                 ) : (
                   rows.map((p) => {
-                    const win = g && p.ticket === g.ticket;
+                    const win = Boolean(g && p.ticket === g.ticket);
                     return (
                       <tr key={p.id} className={`${win ? 'is-hl' : ''} ${flashId === p.id ? 'is-flash' : ''}`}>
                         <td>
@@ -298,6 +298,44 @@ export default function AdminPage() {
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="ch-admin-people-cards" aria-label="Lista de participantes">
+            {rows.length === 0 ? (
+              <div className="ch-admin-people-empty">Ningún participante coincide con la búsqueda</div>
+            ) : (
+              rows.map((p) => {
+                const win = Boolean(g && p.ticket === g.ticket);
+                return (
+                  <article
+                    key={p.id}
+                    className={`ch-admin-person ${win ? 'is-hl' : ''} ${flashId === p.id ? 'is-flash' : ''}`}
+                  >
+                    <div className="name">
+                      {p.nombre}
+                      {win && <span className="ch-badge">Ganador</span>}
+                      <span className="ticket">#{p.ticket}</span>
+                    </div>
+                    <div className="meta-row">
+                      <span>
+                        Cédula <b className="ch-mono">{p.cedula}</b>
+                      </span>
+                      <span>
+                        Tel. <b className="ch-mono">{p.telefono}</b>
+                      </span>
+                      <span>{p.hora}</span>
+                    </div>
+                    <div className="meta-row">
+                      <span>
+                        <b>{p.laboratorio}</b> · {p.cargo}
+                      </span>
+                    </div>
+                    <div className="meta-row">
+                      <span>{p.correo}</span>
+                    </div>
+                  </article>
+                );
+              })
+            )}
           </div>
         </section>
       </main>

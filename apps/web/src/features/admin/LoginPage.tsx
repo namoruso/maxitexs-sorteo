@@ -72,8 +72,8 @@ export default function LoginPage() {
         </div>
       </form>
       <style>{`
-        .login-page{min-height:100vh;display:grid;place-items:center;padding:32px 16px;background:radial-gradient(ellipse 80% 50% at 50% -10%,var(--primary-soft),transparent),var(--bg)}
-        .login-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);padding:40px 32px 32px;box-shadow:var(--shadow-modal)}
+        .login-page{min-height:100dvh;min-height:100vh;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(ellipse 80% 50% at 50% -10%,var(--primary-soft),transparent),var(--bg);box-sizing:border-box}
+        .login-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);padding:clamp(24px,5vw,40px) clamp(16px,4vw,32px) 32px;box-shadow:var(--shadow-modal);box-sizing:border-box}
         .login-card .brand{display:flex;justify-content:center;margin-bottom:28px}
         .login-card h1{font-size:24px;margin:0 0 8px;text-align:center;color:var(--ink)}
         .login-card .sub{text-align:center;color:var(--ink-muted);margin:0 0 28px;font-size:15px}

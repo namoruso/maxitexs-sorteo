@@ -19,13 +19,13 @@ export function App() {
   return (
     <Suspense fallback={<Fallback />}>
       <Routes>
-        <Route path="/" element={<Navigate to="/registro" replace />} />
-        <Route path="/registro" element={<RegistroPage />} />
+        <Route path="/" element={<Navigate to="/totem" replace />} />
         <Route path="/totem" element={<TotemPage />} />
+        <Route path="/registro" element={<RegistroPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/login" element={<LoginPage />} />
         <Route path="/privacidad" element={<PrivacidadPage />} />
-        <Route path="*" element={<Navigate to="/registro" replace />} />
+        <Route path="*" element={<Navigate to="/totem" replace />} />
       </Routes>
     </Suspense>
   );

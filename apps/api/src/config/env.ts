@@ -16,6 +16,8 @@ const schema = z.object({
     .min(1)
     .default('postgresql://maxitexs:maxitexs@localhost:5432/maxitexs_sorteo'),
   PUBLIC_URL: z.string().optional(),
+  /** Render injects this automatically (e.g. https://maxitexs-sorteo.onrender.com). */
+  RENDER_EXTERNAL_URL: z.string().optional(),
   RAILWAY_PUBLIC_DOMAIN: z.string().optional(),
   EVENT_NAME: z.string().default("Jornada Maxitex’s 2026"),
   EVENT_DATE: z.string().optional(),
@@ -41,7 +43,20 @@ const isProd = e.NODE_ENV === 'production';
 const onRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
 
 function publicUrl(): string {
-  if (e.PUBLIC_URL) return e.PUBLIC_URL.replace(/\/$/, '');
+  const strip = (u: string) => u.replace(/\/$/, '');
+  const hosted = Boolean(
+    process.env.RENDER ||
+      process.env.RENDER_EXTERNAL_URL ||
+      process.env.RAILWAY_ENVIRONMENT ||
+      e.NODE_ENV === 'production',
+  );
+  if (e.PUBLIC_URL) {
+    const u = strip(e.PUBLIC_URL);
+    // Ignore leftover localhost values when deployed
+    if (!hosted) return u;
+    if (!/localhost|127\.0\.0\.1/.test(u)) return u;
+  }
+  if (e.RENDER_EXTERNAL_URL) return strip(e.RENDER_EXTERNAL_URL);
   if (e.RAILWAY_PUBLIC_DOMAIN) return `https://${e.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`;
   return 'http://localhost:5173';
 }

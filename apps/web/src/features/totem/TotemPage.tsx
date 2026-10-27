@@ -44,10 +44,21 @@ export default function TotemPage() {
     }
   });
 
-  // QR
+  // QR — prefer same-origin registro URL so a bad PUBLIC_URL never points to localhost
   useEffect(() => {
-    const url = data?.url_registro;
-    if (!url || url === qrDrawn.current) return;
+    const fromApi = data?.url_registro;
+    const origin = window.location.origin;
+    let url = `${origin}/registro`;
+    if (fromApi && !/localhost|127\.0\.0\.1/.test(fromApi)) {
+      try {
+        const u = new URL(fromApi);
+        // Same host as the totem page, or any non-local absolute URL from the API
+        if (u.origin === origin || u.protocol === 'https:') url = fromApi;
+      } catch {
+        /* keep origin fallback */
+      }
+    }
+    if (url === qrDrawn.current) return;
     const el = document.getElementById('qr');
     if (!el) return;
     QRCode.toString(url, { type: 'svg', margin: 0, color: { dark: '#15264e', light: '#00000000' } })
@@ -57,6 +68,9 @@ export default function TotemPage() {
         if (s) {
           s.setAttribute('width', '560');
           s.setAttribute('height', '560');
+          s.setAttribute('viewBox', s.getAttribute('viewBox') || '0 0 1 1');
+          s.style.width = '100%';
+          s.style.height = '100%';
         }
         qrDrawn.current = url;
       })

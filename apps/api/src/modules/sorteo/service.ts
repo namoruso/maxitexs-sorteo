@@ -223,7 +223,7 @@ export async function registrar(data: RegistroInput): Promise<RegistroResponse> 
   }
 }
 
-export async function getTotemEstado(): Promise<TotemEstadoResponse> {
+export async function getTotemEstado(requestBaseUrl?: string): Promise<TotemEstadoResponse> {
   touchTotem();
   const jornadaId = await activeJornadaId();
   const resolved = await resolveTotemEstado();
@@ -252,11 +252,16 @@ export async function getTotemEstado(): Promise<TotemEstadoResponse> {
     }
   }
 
+  const base =
+    requestBaseUrl && !/localhost|127\.0\.0\.1/.test(requestBaseUrl)
+      ? requestBaseUrl.replace(/\/$/, '')
+      : env.publicUrl;
+
   return {
     estado: resolved.estado,
     total,
     premio: env.PREMIO,
-    url_registro: `${env.publicUrl}/registro`,
+    url_registro: `${base}/registro`,
     sorteo_id: resolved.sorteoId,
     nombres: names.map((r) => maskName(r.nombre)),
     ganador,

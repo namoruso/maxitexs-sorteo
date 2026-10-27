@@ -57,9 +57,12 @@ export function publicRoutes(): Router {
     }
   });
 
-  router.get('/totem/estado', async (_req, res, next) => {
+  router.get('/totem/estado', async (req, res, next) => {
     try {
-      res.json(await sorteo.getTotemEstado());
+      const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https');
+      const host = String(req.headers['x-forwarded-host'] || req.headers.host || '');
+      const requestBase = host ? `${proto}://${host.split(',')[0]!.trim()}` : undefined;
+      res.json(await sorteo.getTotemEstado(requestBase));
     } catch (e) {
       next(e);
     }

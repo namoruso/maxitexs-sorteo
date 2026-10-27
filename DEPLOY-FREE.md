@@ -81,7 +81,7 @@ PUBLIC_URL=https://random-words-xxxx.trycloudflare.com npm start
 
 1. Sube el repo a GitHub.
 2. [render.com](https://render.com) → New → Blueprint → este repo (`render.yaml`).
-3. Pon `PUBLIC_URL=https://TU-APP.onrender.com`.
+3. Pon `PUBLIC_URL=https://TU-APP.onrender.com` (opcional: si falta, se usa `RENDER_EXTERNAL_URL`; el QR también usa la URL del mismo origen).
 4. Evita el sleep con un ping gratis cada 10 min:
    - [cron-job.org](https://cron.job.org) (gratis) → URL: `https://TU-APP.onrender.com/api/health` cada 10 minutos.
 

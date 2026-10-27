@@ -220,8 +220,8 @@
 .ch-seg { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1); }
 .ch-seg .ch-chip { justify-content: center; }
 
-/* Admin 1440×900 */
-.ch-admin { width: 1440px; height: 900px; background: var(--bg); display: flex; flex-direction: column; }
+/* Admin — fluid layout (was 1440×900 artboard) */
+.ch-admin { width: 100%; min-height: 100dvh; min-height: 100vh; background: var(--bg); display: flex; flex-direction: column; }
 .ch-admin-bar { height: 72px; flex: none; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4); background: var(--surface); border-bottom: 1px solid var(--line); }
 .ch-admin-bar .ev b { display: block; font-size: 18px; line-height: 1.2; }
 .ch-admin-bar .ev span { font-size: 14px; color: var(--ink-muted); }
