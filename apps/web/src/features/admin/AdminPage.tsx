@@ -274,15 +274,15 @@ export default function AdminPage() {
             </div>
           </header>
           <div className="ch-table-wrap">
-            <table className="ch-table">
+            <table className="ch-table ch-admin-people-table">
               <thead>
                 <tr>
-                  <th style={{ width: '19%' }}>Nombre y apellido</th>
-                  <th style={{ width: '11%' }}>Cédula</th>
-                  <th style={{ width: '23%' }}>Laboratorio · Cargo</th>
-                  <th style={{ width: '12%' }}>Teléfono</th>
-                  <th style={{ width: '22%' }}>Correo</th>
-                  <th style={{ width: '7%' }}>Ticket</th>
+                  <th>Nombre y apellido</th>
+                  <th>Cédula</th>
+                  <th>Laboratorio · Cargo</th>
+                  <th>Teléfono</th>
+                  <th>Correo</th>
+                  <th>Ticket</th>
                   <th>Hora</th>
                 </tr>
               </thead>
@@ -298,23 +298,23 @@ export default function AdminPage() {
                     const win = Boolean(g && p.ticket === g.ticket);
                     return (
                       <tr key={p.id} className={`${win ? 'is-hl' : ''} ${flashId === p.id ? 'is-flash' : ''}`}>
-                        <td>
-                          <span className="ch-row" style={{ gap: 8, flexWrap: 'nowrap' }}>
-                            {p.nombre}
+                        <td className="ch-admin-col-name">
+                          <span className="ch-admin-name-cell">
+                            <span className="ch-admin-name-text">{p.nombre}</span>
                             {win && <span className="ch-badge">Ganador</span>}
                           </span>
                         </td>
-                        <td className="ch-mono">{p.cedula}</td>
+                        <td className="ch-mono ch-admin-col-cedula">{p.cedula}</td>
                         <td>
                           <span className="ch-cell2">
                             <b>{p.laboratorio}</b>
                             <small>{p.cargo}</small>
                           </span>
                         </td>
-                        <td className="ch-mono">{p.telefono}</td>
-                        <td>{p.correo}</td>
-                        <td className="ch-mono">#{p.ticket}</td>
-                        <td className="ch-mono">{p.hora}</td>
+                        <td className="ch-mono ch-admin-col-phone">{p.telefono}</td>
+                        <td className="ch-admin-col-mail">{p.correo}</td>
+                        <td className="ch-mono ch-admin-col-ticket">#{p.ticket}</td>
+                        <td className="ch-mono ch-admin-col-hora">{p.hora}</td>
                       </tr>
                     );
                   })

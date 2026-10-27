@@ -149,7 +149,8 @@ html.totem-compact .totem-stage .ch-totem-launch-btn {
   font-size: 34px !important;
 }
 html.totem-compact .totem-stage .ch-totem--win .ch-totem-winner {
-  margin-top: 48px !important;
+  margin-top: 32px !important;
+  padding: 40px 40px !important;
 }
 html.totem-compact .totem-stage .ch-slot {
   width: 840px !important;
@@ -158,15 +159,29 @@ html.totem-compact .totem-stage .ch-slot {
 html.totem-compact .totem-stage .ch-totem-sub {
   font-size: 32px;
 }
-html.totem-compact .totem-stage .ch-totem-winner .nm {
+html.totem-compact .totem-stage .ch-totem--win h1 {
   font-size: 72px;
 }
-html.totem-compact .totem-stage .ch-totem-claim {
+html.totem-compact .totem-stage .ch-totem-winner .nm {
+  font-size: 96px;
+}
+html.totem-compact .totem-stage .ch-totem-winner .lab {
+  font-size: 40px;
+}
+html.totem-compact .totem-stage .ch-totem-winner .ct {
   font-size: 32px;
-  margin-top: 32px;
+}
+html.totem-compact .totem-stage .ch-totem-claim {
+  font-size: 36px;
+  margin-top: 28px;
+  max-width: 920px;
 }
 html.totem-compact .totem-stage .ch-totem-foot {
   font-size: 28px;
+  padding-bottom: 8px;
+}
+html.totem-compact .totem-stage .ch-totem--win {
+  padding: 40px 48px !important;
 }
 
 /* ---------- Admin: fluid document layout (no clipped panels) ---------- */
@@ -212,16 +227,56 @@ html, body, #root {
   max-width: 100%;
   overflow: auto;
 }
-.ch-admin-table .ch-table td {
+.ch-admin-people-table {
+  table-layout: auto !important;
+  width: 100%;
+  min-width: 880px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.ch-admin-people-table th,
+.ch-admin-people-table td {
   white-space: nowrap;
-  line-height: 1.35;
+  line-height: 1.4;
   vertical-align: middle;
   height: auto;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding: 14px 12px;
+  overflow: visible;
+  text-overflow: unset;
 }
-.ch-admin-table .ch-table th {
-  white-space: nowrap;
+.ch-admin-people-table .ch-admin-col-name {
+  min-width: 200px;
+  white-space: normal;
+}
+.ch-admin-name-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.ch-admin-name-text {
+  font-weight: 700;
+  word-break: break-word;
+}
+.ch-admin-people-table .ch-admin-col-cedula { min-width: 120px; }
+.ch-admin-people-table .ch-admin-col-phone { min-width: 130px; }
+.ch-admin-people-table .ch-admin-col-mail {
+  min-width: 160px;
+  max-width: 240px;
+  white-space: normal;
+  word-break: break-word;
+}
+.ch-admin-people-table .ch-admin-col-ticket,
+.ch-admin-people-table .ch-admin-col-hora {
+  min-width: 72px;
+  text-align: right;
+}
+.ch-admin-people-table tr.is-hl td {
+  background: var(--accent-soft);
+}
+.ch-admin-people-table tr.is-hl .ch-admin-name-text {
+  font-weight: 800;
 }
 .ch-admin-people-cards { display: none; }
 .ch-admin-people-empty {
@@ -319,7 +374,58 @@ html, body, #root {
   }
 }
 
-/* Phone / narrow — cards list instead of table */
+/* Medium / split screens — cards so name + Ganador always readable */
+@media (max-width: 1200px) {
+  .ch-admin-table .ch-table-wrap { display: none; }
+  .ch-admin-people-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ch-admin-person {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    padding: 14px 16px;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+  .ch-admin-person.is-hl {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .ch-admin-person.is-flash {
+    animation: flashrow 2.4s ease;
+  }
+  .ch-admin-person .name {
+    font-weight: 800;
+    font-size: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    word-break: break-word;
+  }
+  .ch-admin-person .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    word-break: break-word;
+  }
+  .ch-admin-person .meta-row b { color: var(--ink); font-weight: 700; }
+  .ch-admin-person .ticket {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    color: var(--primary);
+    margin-left: auto;
+  }
+}
+
+/* Phone / narrow */
 @media (max-width: 820px) {
   .ch-admin-bar {
     padding: 10px 12px;
@@ -414,52 +520,6 @@ html, body, #root {
     min-height: 96px;
     padding: 14px;
     font-size: 14px;
-  }
-
-  .ch-admin-table .ch-table-wrap { display: none; }
-  .ch-admin-people-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .ch-admin-person {
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    padding: 12px;
-    display: grid;
-    gap: 6px;
-    min-width: 0;
-  }
-  .ch-admin-person.is-hl {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-  }
-  .ch-admin-person.is-flash {
-    animation: flashrow 2.4s ease;
-  }
-  .ch-admin-person .name {
-    font-weight: 800;
-    font-size: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    word-break: break-word;
-  }
-  .ch-admin-person .meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    font-size: 12px;
-    color: var(--ink-muted);
-    word-break: break-word;
-  }
-  .ch-admin-person .meta-row b { color: var(--ink); font-weight: 700; }
-  .ch-admin-person .ticket {
-    font-variant-numeric: tabular-nums;
-    font-weight: 800;
-    color: var(--primary);
   }
 
   .ch-admin-foot {
