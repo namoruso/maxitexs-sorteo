@@ -11,7 +11,9 @@ export default function AdminPage() {
   const [q, setQ] = useState('');
   const [toast, setToast] = useState('');
   const [flashId, setFlashId] = useState<number | null>(null);
-  const [modal, setModal] = useState<'preparar' | 'lanzar' | 'reiniciar' | null>(null);
+  const [modal, setModal] = useState<'preparar' | 'lanzar' | 'manual' | 'reiniciar' | null>(null);
+  const [manualQ, setManualQ] = useState('');
+  const [manualId, setManualId] = useState<number | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -81,13 +83,35 @@ export default function AdminPage() {
     void load();
   }
 
-  async function lanzar() {
+  async function lanzar(participanteId?: number) {
     setModal(null);
-    const r = await api<{ mensaje?: string }>('/api/admin/sorteo', { method: 'POST' });
+    setManualId(null);
+    setManualQ('');
+    const r = await api<{ mensaje?: string }>('/api/admin/sorteo', {
+      method: 'POST',
+      body: participanteId != null ? { participante_id: participanteId } : {},
+    });
     if (!r.ok) return showToast(r.data.mensaje || 'No se pudo lanzar el sorteo.');
-    showToast('Sorteo lanzado — el tótem está girando');
+    showToast(
+      participanteId != null
+        ? 'Ganador manual lanzado — el tótem está girando'
+        : 'Sorteo lanzado — el tótem está girando',
+    );
     void load();
   }
+
+  const elegibles = useMemo(() => {
+    if (!state) return [];
+    const qq = manualQ.toLowerCase().trim();
+    return state.participantes.filter((p) => {
+      if (!p.elegible) return false;
+      if (!qq) return true;
+      return [p.nombre, p.cedula, p.laboratorio, p.ticket, p.telefono]
+        .join(' ')
+        .toLowerCase()
+        .includes(qq);
+    });
+  }, [state, manualQ]);
 
   async function entrega() {
     if (!state?.ganador) return;
@@ -170,17 +194,31 @@ export default function AdminPage() {
             {spinning
               ? 'El tótem está girando. En unos segundos revelará al ganador.'
               : ready
-                ? 'El tótem ya muestra la pantalla del sorteo. Pulsa Lanzar (aquí o en el tótem) para que empiece a girar.'
+                ? 'El tótem ya muestra la pantalla del sorteo. Lanza al azar, elige un ganador manualmente, o pulsa Lanzar en el tótem.'
                 : after
                   ? 'El tótem muestra al ganador. Confirma la entrega o marca ausente. Para otro sorteo, prepara de nuevo el tótem.'
-                  : `Primero prepara el tótem (cambia a la pantalla de sorteo). Luego lanza para elegir un ganador entre los ${state.total} registrados.`}
+                  : `Primero prepara el tótem (cambia a la pantalla de sorteo). Luego lanza al azar o elige un ganador entre los ${state.total} registrados.`}
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {ready ? (
-              <button type="button" className="ch-btn ch-btn--lg ch-btn--primary" onClick={() => setModal('lanzar')}>
-                <Icon name="play" size={22} />
-                <span>Lanzar sorteo</span>
-              </button>
+              <>
+                <button type="button" className="ch-btn ch-btn--lg ch-btn--primary" onClick={() => setModal('lanzar')}>
+                  <Icon name="play" size={22} />
+                  <span>Lanzar al azar</span>
+                </button>
+                <button
+                  type="button"
+                  className="ch-btn ch-btn--lg ch-btn--outline"
+                  onClick={() => {
+                    setManualId(null);
+                    setManualQ('');
+                    setModal('manual');
+                  }}
+                >
+                  <Icon name="search" size={22} />
+                  <span>Elegir ganador</span>
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -391,12 +429,69 @@ export default function AdminPage() {
       )}
       {modal === 'lanzar' && (
         <Modal
-          title="¿Lanzar el sorteo ahora?"
-          body={`Se elegirá 1 ganador al azar entre ${state.total} participantes y el tótem empezará a girar hasta revelarlo.`}
+          title="¿Lanzar el sorteo al azar?"
+          body={`Se elegirá 1 ganador al azar entre los elegibles y el tótem empezará a girar hasta revelarlo.`}
           onClose={() => setModal(null)}
-          okLabel="Sí, lanzar sorteo"
+          okLabel="Sí, lanzar al azar"
           onOk={() => void lanzar()}
         />
+      )}
+      {modal === 'manual' && (
+        <div className="ch-modal-wrap" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
+          <div className="ch-modal ch-modal--manual" role="dialog" aria-modal="true" aria-labelledby="manual-title">
+            <h2 id="manual-title">Elegir ganador manual</h2>
+            <p>
+              El tótem hará la misma animación de giro y revelará a esta persona. Solo aparecen participantes elegibles.
+            </p>
+            <label className="ch-field ch-field--sm" style={{ marginBottom: 12 }}>
+              <div className="ch-input ch-input--icon">
+                <Icon name="search" size={22} />
+                <input
+                  type="search"
+                  placeholder="Buscar nombre, cédula, ticket…"
+                  aria-label="Buscar elegible"
+                  value={manualQ}
+                  onChange={(e) => setManualQ(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </label>
+            <div className="ch-admin-manual-list" role="listbox" aria-label="Participantes elegibles">
+              {elegibles.length === 0 ? (
+                <div className="ch-admin-people-empty">No hay elegibles que coincidan</div>
+              ) : (
+                elegibles.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="option"
+                    aria-selected={manualId === p.id}
+                    className={`ch-admin-manual-item ${manualId === p.id ? 'is-selected' : ''}`}
+                    onClick={() => setManualId(p.id)}
+                  >
+                    <span className="nm">{p.nombre}</span>
+                    <span className="meta">
+                      #{p.ticket} · {p.cedula} · {p.laboratorio}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="ch-modal-actions">
+              <button type="button" className="ch-btn ch-btn--md ch-btn--ghost" onClick={() => setModal(null)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="ch-btn ch-btn--md ch-btn--primary"
+                disabled={manualId == null}
+                onClick={() => manualId != null && void lanzar(manualId)}
+              >
+                Lanzar con animación
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {modal === 'reiniciar' && (
         <Modal

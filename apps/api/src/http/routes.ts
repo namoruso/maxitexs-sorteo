@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { loginSchema, registroSchema, verificarSchema } from '@maxitexs/shared';
+import { lanzarSorteoSchema, loginSchema, registroSchema, verificarSchema } from '@maxitexs/shared';
 import {
   clearSessionCookie,
   destroySession,
@@ -187,9 +187,10 @@ export function adminRoutes(): Router {
     }
   });
 
-  router.post('/sorteo', async (_req, res, next) => {
+  router.post('/sorteo', async (req, res, next) => {
     try {
-      res.json(await sorteo.lanzarSorteo());
+      const body = lanzarSorteoSchema.parse(req.body ?? {});
+      res.json(await sorteo.lanzarSorteo(body.participante_id));
     } catch (e) {
       next(e);
     }

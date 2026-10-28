@@ -45,6 +45,8 @@ export interface ParticipanteAdmin {
   cargo: string;
   ticket: string;
   hora: string;
+  /** False if already won (sorteado/entregado) this jornada. */
+  elegible: boolean;
 }
 
 export interface GanadorAdmin extends ParticipanteAdmin {

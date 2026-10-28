@@ -98,6 +98,11 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+/** Admin launch: omit participante_id for random, or pass it for manual winner. */
+export const lanzarSorteoSchema = z.object({
+  participante_id: z.number().int().positive().optional(),
+});
+
 export function zodToCampos(error: z.ZodError): Record<string, string> {
   const campos: Record<string, string> = {};
   for (const issue of error.issues) {

@@ -40,7 +40,7 @@ function formatHora(d: Date): string {
   });
 }
 
-function toAdmin(p: Participante): ParticipanteAdmin {
+function toAdmin(p: Participante, elegible = true): ParticipanteAdmin {
   return {
     id: p.id,
     nombre: p.nombre,
@@ -51,6 +51,7 @@ function toAdmin(p: Participante): ParticipanteAdmin {
     cargo: p.cargo,
     ticket: formatTicket(p.ticket),
     hora: formatHora(p.creadoAt),
+    elegible,
   };
 }
 
@@ -277,6 +278,14 @@ export async function getAdminEstado(): Promise<AdminEstadoResponse> {
     orderBy: [desc(participantes.creadoAt), desc(participantes.id)],
   });
 
+  const wonRows = await db
+    .select({ participanteId: sorteos.participanteId })
+    .from(sorteos)
+    .where(
+      and(eq(sorteos.jornadaId, jornadaId), inArray(sorteos.estado, ['sorteado', 'entregado'])),
+    );
+  const wonIds = new Set(wonRows.map((w) => w.participanteId));
+
   const labRows = await db
     .select({ n: sql<number>`count(distinct ${participantes.laboratorioKey})::int` })
     .from(participantes)
@@ -311,7 +320,7 @@ export async function getAdminEstado(): Promise<AdminEstadoResponse> {
     total: people.length,
     laboratorios: labs,
     totem_en_linea: totemEnLinea(),
-    participantes: people.map(toAdmin),
+    participantes: people.map((p) => toAdmin(p, !wonIds.has(p.id))),
     ganador,
     sorteo_numero: sorteoNumero,
     entregado,
@@ -375,8 +384,11 @@ export async function prepararSorteo(): Promise<{ ok: true; total: number }> {
   return { ok: true, total };
 }
 
-/** Step 2: pick winner and start totem spin (only from preparacion). */
-export async function lanzarSorteo(): Promise<SorteoResponse> {
+/**
+ * Step 2: pick winner and start totem spin (only from preparacion).
+ * Pass participanteId to force a manual winner; otherwise random.
+ */
+export async function lanzarSorteo(participanteId?: number): Promise<SorteoResponse> {
   const jornadaId = await activeJornadaId();
   const resolved = await resolveTotemEstado();
 
@@ -423,7 +435,19 @@ export async function lanzarSorteo(): Promise<SorteoResponse> {
         );
       }
 
-      const winner = pool[randomInt(0, pool.length)]!;
+      let winner = pool[randomInt(0, pool.length)]!;
+      if (participanteId != null) {
+        const forced = pool.find((p) => p.id === participanteId);
+        if (!forced) {
+          throw new AppError(
+            'NO_ELIGIBLE',
+            'Ese participante no es elegible (no existe o ya ganó).',
+            422,
+          );
+        }
+        winner = forced;
+      }
+
       const maxSorteoRows = await tx
         .select({ max: sql<number>`coalesce(max(${sorteos.numero}), 0)` })
         .from(sorteos)
