@@ -194,7 +194,7 @@ export default function AdminPage() {
             {spinning
               ? 'El tótem está girando. En unos segundos revelará al ganador.'
               : ready
-                ? 'El tótem ya muestra la pantalla del sorteo. Lanza al azar, elige un ganador manualmente, o pulsa Lanzar en el tótem.'
+                ? 'El tótem ya muestra la pantalla del sorteo (parece aleatorio). Desde aquí lanza al azar o elige el ganador; el público solo ve la animación.'
                 : after
                   ? 'El tótem muestra al ganador. Confirma la entrega o marca ausente. Para otro sorteo, prepara de nuevo el tótem.'
                   : `Primero prepara el tótem (cambia a la pantalla de sorteo). Luego lanza al azar o elige un ganador entre los ${state.total} registrados.`}
@@ -421,7 +421,7 @@ export default function AdminPage() {
       {modal === 'preparar' && (
         <Modal
           title="¿Ir a la pantalla de sorteo?"
-          body="El tótem dejará el QR y mostrará la animación de cambio a la pantalla de sorteo. El ganador aún no se elige hasta que pulses Lanzar."
+          body="El tótem dejará el QR y mostrará la pantalla de sorteo (nombres girando). El ganador se elige después desde este panel."
           onClose={() => setModal(null)}
           okLabel="Sí, preparar tótem"
           onOk={() => void preparar()}
@@ -430,7 +430,7 @@ export default function AdminPage() {
       {modal === 'lanzar' && (
         <Modal
           title="¿Lanzar el sorteo al azar?"
-          body={`Se elegirá 1 ganador al azar entre los elegibles y el tótem empezará a girar hasta revelarlo.`}
+          body={`Se elegirá 1 ganador al azar entre los elegibles. El tótem girará y lo revelará como si fuera totalmente aleatorio.`}
           onClose={() => setModal(null)}
           okLabel="Sí, lanzar al azar"
           onOk={() => void lanzar()}
@@ -441,7 +441,7 @@ export default function AdminPage() {
           <div className="ch-modal ch-modal--manual" role="dialog" aria-modal="true" aria-labelledby="manual-title">
             <h2 id="manual-title">Elegir ganador manual</h2>
             <p>
-              El tótem hará la misma animación de giro y revelará a esta persona. Solo aparecen participantes elegibles.
+              El tótem hará la misma animación de giro y revelará a esta persona. El público no ve que fue elección manual.
             </p>
             <label className="ch-field ch-field--sm" style={{ marginBottom: 12 }}>
               <div className="ch-input ch-input--icon">

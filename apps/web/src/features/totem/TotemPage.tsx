@@ -12,8 +12,6 @@ export default function TotemPage() {
   useScaleToFit(stageRef);
 
   const [data, setData] = useState<TotemEstadoResponse | null>(null);
-  const [launching, setLaunching] = useState(false);
-  const [launchErr, setLaunchErr] = useState('');
   const lastSorteoId = useRef<number | null>(null);
   const idleStarted = useRef(false);
   const reelRef = useRef<HTMLDivElement>(null);
@@ -92,28 +90,14 @@ export default function TotemPage() {
     startIdleReel(reelRef.current, data.nombres);
   }, [data]);
 
-  // Slot animation when entering sorteo (after Lanzar)
+  // Slot animation when admin launches (random or manual — totem always looks random)
   useEffect(() => {
     if (!data || data.estado !== 'sorteo') return;
     if (lastSorteoId.current === data.sorteo_id) return;
     lastSorteoId.current = data.sorteo_id;
     idleStarted.current = false;
-    setLaunching(false);
     runSlot(reelRef.current, data.nombres, data.ganador?.nombre_mask ?? '');
   }, [data]);
-
-  async function onLanzar() {
-    if (launching) return;
-    setLaunchErr('');
-    setLaunching(true);
-    const r = await api<{ mensaje?: string }>('/api/totem/lanzar', { method: 'POST' });
-    if (!r.ok) {
-      setLaunching(false);
-      setLaunchErr(r.data.mensaje || 'No se pudo lanzar el sorteo.');
-      return;
-    }
-    void load();
-  }
 
   const estado = data?.estado ?? 'captacion';
   const premio = data?.premio ?? 'Premio';
@@ -153,7 +137,7 @@ export default function TotemPage() {
           <p className="ch-totem-foot">Toma menos de 1 minuto · Un registro por cédula</p>
         </div>
 
-        {/* Preparación + Sorteo (misma pantalla; el botón Lanzar solo en preparación) */}
+        {/* Preparación + Sorteo — audience always sees a random-looking draw; launch is admin-only */}
         <div
           className={`ch ch-screen ch-totem ch-totem--draw totem-state ${onDraw ? 'totem-state--in' : 'totem-state--out'}`}
           aria-hidden={!onDraw}
@@ -176,23 +160,8 @@ export default function TotemPage() {
                 <div className="ch-slot-frame" style={{ top: 176, height: 188 }} />
               </div>
             </div>
-            {estado === 'preparacion' && (
-              <div className="ch-totem-launch">
-                <button
-                  type="button"
-                  className="ch-btn ch-btn--primary ch-totem-launch-btn"
-                  onClick={() => void onLanzar()}
-                  disabled={launching}
-                >
-                  <span>{launching ? 'Lanzando…' : 'Lanzar sorteo'}</span>
-                </button>
-                {launchErr && <p className="ch-totem-launch-err">{launchErr}</p>}
-              </div>
-            )}
           </div>
-          <p className="ch-totem-foot">
-            {estado === 'preparacion' ? 'Toca el botón para elegir al ganador' : 'Sorteo al azar · Un ticket por cédula'}
-          </p>
+          <p className="ch-totem-foot">Sorteo al azar · Un ticket por cédula</p>
         </div>
 
         {/* Ganador */}
